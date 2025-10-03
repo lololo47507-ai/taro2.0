@@ -95,16 +95,16 @@
 
   <div class="dbg" id="dbg">init…</div>
 
-  <script>
+ <script>
   const tg = window.Telegram?.WebApp;
 
-  function send(action, extra = {}, opts = {}) {
-    const { autoClose = true, delay } = opts;
+  // Максимально жёсткая отправка: sendData → сразу закрыть окно
+  function send(action, extra = {}, autoClose = true) {
     const payload = JSON.stringify({ action, ...extra });
+    try { tg?.showAlert?.("SEND: " + payload); } catch (_) {}
 
-    try { tg?.showAlert?.("SEND: " + payload); } catch(_) {}
     try {
-      tg?.sendData(payload);
+      tg?.sendData?.(payload);
     } catch (e) {
       try { tg?.showAlert?.("sendData error: " + (e?.message || e)); } catch(_) {}
       console.error(e);
@@ -112,21 +112,16 @@
     }
 
     if (autoClose) {
-      const ms = typeof delay === "number"
-        ? delay
-        : (tg?.platform === "tdesktop" ? 350 : 150);
-      setTimeout(() => {
-        try { tg?.disableClosingConfirmation?.(); } catch(_) {}
-        try { tg?.close?.(); } catch(_) {}
-      }, ms);
+      // Без задержек, некоторые клиенты доставляют событие только после закрытия окна
+      try { tg?.close?.(); } catch (_) {}
     }
   }
 
-  // Примеры использования:
-  // document.getElementById('btnBalance').onclick = () => send('balance'); // закроет WebApp и ответ придёт сразу
-  // document.getElementById('btnPing').onclick    = () => send('ping', {ts: Date.now()});
-  // Для покупки (после выбора пакета) тоже закрываем, чтобы инвойс пришёл сразу:
-  // send('buy', {qty}, {autoClose: true});
+  // Примеры:
+  // document.getElementById('btnBalance').onclick = () => send('balance');
+  // document.getElementById('btnPing').onclick = () => send('ping', {ts: Date.now()});
+  // В магазине:
+  // send('buy', {qty}, true);
 </script>
   
     // Магазин
@@ -172,3 +167,4 @@
 </body>
 
 </html>
+
