@@ -96,65 +96,39 @@
   <div class="dbg" id="dbg">init…</div>
 
   <script>
-    const tg = window.Telegram?.WebApp;
-    const dbg = (msg)=>{ const el = document.getElementById('dbg'); el.textContent = msg; };
+  const tg = window.Telegram?.WebApp;
 
-    function alertSafe(text){
-      try { tg?.showAlert(String(text)); } catch(e){ console.log('alert:', text); }
-      dbg(String(text));
-    }
+  function send(action, extra = {}, opts = {}) {
+    const { autoClose = true, delay } = opts;
+    const payload = JSON.stringify({ action, ...extra });
 
-    function send(action, extra={}){
-      const payload = JSON.stringify({action, ...extra});
-      alertSafe("SEND: " + payload);
-      try {
-        tg.sendData(payload);
-      } catch (e) {
-        alertSafe("sendData error: " + (e?.message || e));
-      }
-    }
-
-    // Init Telegram WebApp
+    try { tg?.showAlert?.("SEND: " + payload); } catch(_) {}
     try {
-      tg.ready();
-      tg.expand(); // максимум высоты
-      tg.enableClosingConfirmation();
-      tg.onEvent('themeChanged', ()=>{});
+      tg?.sendData(payload);
     } catch (e) {
-      console.warn('TG init error', e);
+      try { tg?.showAlert?.("sendData error: " + (e?.message || e)); } catch(_) {}
+      console.error(e);
+      return;
     }
 
-    // Header color безопасно
-    try { tg.setHeaderColor(tg.colorScheme === 'dark' ? '#070814' : '#ffffff'); } catch(e){}
+    if (autoClose) {
+      const ms = typeof delay === "number"
+        ? delay
+        : (tg?.platform === "tdesktop" ? 350 : 150);
+      setTimeout(() => {
+        try { tg?.disableClosingConfirmation?.(); } catch(_) {}
+        try { tg?.close?.(); } catch(_) {}
+      }, ms);
+    }
+  }
 
-    // Пользователь
-    try {
-      const u = tg.initDataUnsafe?.user;
-      if (u) document.getElementById('user').textContent = `@${u.username || 'user'}  •  id ${u.id}`;
-    } catch(e){}
-
-    // Часы
-    const fmt = new Intl.DateTimeFormat('ru-RU', {hour:'2-digit',minute:'2-digit'});
-    const setClock = ()=> document.getElementById('clock').textContent = fmt.format(new Date());
-    setClock(); setInterval(setClock, 30_000);
-
-    // Кнопки баланса и пинга
-    document.getElementById('btnBalance').onclick = ()=> send('balance');
-    document.getElementById('btnPing').onclick = ()=> send('ping', {ts: Date.now()});
-
-    // Плитки раскладов
-    document.querySelectorAll('.tile').forEach(el=>{
-      el.addEventListener('click', ()=>{
-        const act = el.dataset.act;
-        if (act === 'yes_no') {
-          const q = prompt('Введите ваш вопрос (Да/Нет):');
-          if (!q) return;
-          return send('yes_no', {question: q});
-        }
-        return send(act);
-      });
-    });
-
+  // Примеры использования:
+  // document.getElementById('btnBalance').onclick = () => send('balance'); // закроет WebApp и ответ придёт сразу
+  // document.getElementById('btnPing').onclick    = () => send('ping', {ts: Date.now()});
+  // Для покупки (после выбора пакета) тоже закрываем, чтобы инвойс пришёл сразу:
+  // send('buy', {qty}, {autoClose: true});
+</script>
+  
     // Магазин
     const shop = document.getElementById('shop');
     const packsData = [
@@ -196,4 +170,5 @@
     alertSafe("WebApp готов");
   </script>
 </body>
+
 </html>
