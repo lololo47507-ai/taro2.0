@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width,initial-scale=1"/>
-  <title>Tarot Menu</title>
+  <title>AI Tarot • Меню</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
     :root{
@@ -31,6 +31,7 @@
     .cards{display:grid;gap:12px;margin-top:12px}
     @media (min-width:780px){ .cards{grid-template-columns:repeat(4,1fr)} }
     .tile{border:1px solid var(--border);border-radius:16px;padding:14px;min-height:90px;display:flex;align-items:flex-end;cursor:pointer}
+    .tile:hover{outline:2px solid rgba(137,121,255,.35)}
     .sheet{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(8px);display:none;align-items:flex-end;z-index:5}
     .sheet.open{display:flex}
     .sheet .box{background:var(--card);border:1px solid var(--border);border-radius:18px 18px 0 0;padding:14px;width:100%;max-width:960px;margin:0 auto}
@@ -40,7 +41,6 @@
     .badge{font-size:12px;color:#fff;padding:4px 8px;border-radius:10px;background:rgba(255,255,255,.08);border:1px dashed rgba(255,255,255,.18)}
     .price{font-weight:1000;white-space:nowrap}
     @media (max-width:420px){ .pack{grid-template-columns:1fr} }
-    /* всплывающий debug-уголок */
     .dbg{position:fixed;right:8px;bottom:8px;background:rgba(0,0,0,.45);border:1px solid var(--border);border-radius:10px;padding:8px 10px;font-size:12px;color:#ddd;max-width:70vw;z-index:9}
     .dbg b{color:#fff}
   </style>
@@ -95,40 +95,67 @@
 
   <div class="dbg" id="dbg">init…</div>
 
- <script>
-  const tg = window.Telegram?.WebApp;
+  <script>
+    const tg = window.Telegram?.WebApp;
+    const dbg = (msg)=>{ const el = document.getElementById('dbg'); el.textContent = msg; };
 
-  // Максимально жёсткая отправка: sendData → сразу закрыть окно
-  function send(action, extra = {}, autoClose = true) {
-    const payload = JSON.stringify({ action, ...extra });
-    try { tg?.showAlert?.("SEND: " + payload); } catch (_) {}
+    function alertSafe(text){
+      try { tg?.showAlert(String(text)); } catch(e){ console.log('alert:', text); }
+      dbg(String(text));
+    }
 
+    // Жёсткая отправка: отправить и закрыть WebApp (нужно для некоторых клиентов Telegram)
+    function send(action, extra = {}, autoClose = true){
+      const payload = JSON.stringify({action, ...extra});
+      try { tg?.showAlert?.("SEND: " + payload); } catch(_) {}
+      try { tg?.sendData?.(payload); } catch(e){
+        try { tg?.showAlert?.("sendData error: " + (e?.message || e)); } catch(_) {}
+        console.error(e);
+        return;
+      }
+      if (autoClose){
+        try { tg?.disableClosingConfirmation?.(); } catch(_) {}
+        // без задержки — событие приходит сразу после закрытия окна
+        try { tg?.close?.(); } catch(_) {}
+      }
+    }
+
+    // Init Telegram WebApp
     try {
-      tg?.sendData?.(payload);
+      tg.ready();
+      tg.expand();               // максимум высоты
+      // tg.enableClosingConfirmation();  // НЕ включаем, чтобы close() не спрашивал подтверждение
+      tg.onEvent('themeChanged', ()=>{});
     } catch (e) {
-      try { tg?.showAlert?.("sendData error: " + (e?.message || e)); } catch(_) {}
-      console.error(e);
-      return;
+      console.warn('TG init error', e);
     }
 
-    if (autoClose) {
-      // Без задержек, некоторые клиенты доставляют событие только после закрытия окна
-      try { tg?.close?.(); } catch (_) {}
-    }
-  }
+    // Header color безопасно
+    try { tg.setHeaderColor(tg.colorScheme === 'dark' ? '#070814' : '#ffffff'); } catch(e){}
 
-  // Примеры:
-  // document.getElementById('btnBalance').onclick = () => send('balance');
-  // document.getElementById('btnPing').onclick = () => send('ping', {ts: Date.now()});
-  // В магазине:
-  // send('buy', {qty}, true);
-</script>
-  
-    // Магазин
-    const shop = document.getElementById('shop');
-    const packsData = [
-      {qty:100,  priceRub:250,  discount:0},
-      {qty:200,  priceRub:480,  discount:5},
+    // Пользователь
+    try {
+      const u = tg.initDataUnsafe?.user;
+      if (u) document.getElementById('user').textContent = `@${u.username || 'user'}  •  id ${u.id}`;
+    } catch(e){}
+
+    // Часы
+    const fmt = new Intl.DateTimeFormat('ru-RU', {hour:'2-digit',minute:'2-digit'});
+    const setClock = ()=> document.getElementById('clock').textContent = fmt.format(new Date());
+    setClock(); setInterval(setClock, 30_000);
+
+    // Кнопки баланса и пинга
+    document.getElementById('btnBalance').onclick = ()=> send('balance');
+    document.getElementById('btnPing').onclick    = ()=> send('ping', {ts: Date.now()});
+
+    // Плитки раскладов
+    document.querySelectorAll('.tile').forEach(el=>{
+      el.addEventListener('click', ()=>{
+        const act = el.dataset.act;
+        if (act === 'yes_no') {
+          const q = prompt('Введите ваш вопрос (Да/Нет):');
+          if (!q) return;
+          return send('yes_no},
       {qty:300,  priceRub:725,  discount:10},
       {qty:500,  priceRub:1180, discount:15},
       {qty:1000, priceRub:2250, discount:20}
@@ -140,19 +167,7 @@
       row.innerHTML = `
         <div class="left">
           <span class="pill">${p.qty} сообщений</span>
-          ${p.discount? `<span class="badge">−${p.discount}%</span>`:''}
-        </div>
-        <div class="price">${p.priceRub.toLocaleString('ru-RU')} ₽</div>
-        <div class="right">
-          <button class="btn buy" data-qty="${p.qty}">Купить</button>
-        </div>`;
-      packs.appendChild(row);
-    });
-    document.getElementById('btnTopup').onclick = ()=> { shop.classList.add('open'); alertSafe('open shop'); };
-    document.getElementById('closeShop').onclick = ()=> { shop.classList.remove('open'); alertSafe('close shop'); };
-    shop.addEventListener('click', (e)=>{
-      if (e.target === shop) { shop.classList.remove('open'); return; }
-      const btn = e.target.closest('button[data-qty]');
+          ${p.discount? `<span class="badge">−${p.discount}%</span>`:'' const btn = e.target.closest('button[data-qty]');
       if (btn) { send('buy', {qty: parseInt(btn.dataset.qty,10)}); shop.classList.remove('open'); }
     });
 
@@ -165,6 +180,4 @@
     alertSafe("WebApp готов");
   </script>
 </body>
-
 </html>
-
