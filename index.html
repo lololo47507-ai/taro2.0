@@ -6,169 +6,93 @@
   <title>AI Tarot • Mini App</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    /* ====== НЕОНОВЫЙ МАГИЧЕСКИЙ ТЕМА ====== */
     :root{
-      --bg:#060612;
-      --fg:#f6f3ff;
-      --muted:#bdb6df;
-      --glass:rgba(255,255,255,.06);
-      --border:rgba(255,255,255,.14);
-      --accent:#8c6bff;
-      --accent2:#2ad2ff;
-      --accent3:#ff6ad5;
-      --good:#47ffa6;
-      --warn:#ffd147;
-      --danger:#ff6b6b;
-      --glow: 0 0 14px rgba(140,107,255,.65), 0 0 28px rgba(57,189,255,.35);
-      --radius:16px;
+      --bg:#060612; --fg:#f6f3ff; --muted:#bdb6df; --glass:rgba(255,255,255,.06);
+      --border:rgba(255,255,255,.14); --accent:#8c6bff; --accent2:#2ad2ff; --accent3:#ff6ad5;
+      --glow:0 0 14px rgba(140,107,255,.65), 0 0 28px rgba(57,189,255,.35); --radius:16px;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%}
+    *{box-sizing:border-box} html,body{height:100%}
     body{
-      margin:0;color:var(--fg);background:radial-gradient(1000px 600px at 10% -10%, rgba(140,107,255,.25), transparent 60%),
-                                     radial-gradient(900px 700px at 100% 0%, rgba(57,189,255,.20), transparent 60%),
-                                     radial-gradient(800px 700px at 100% 100%, rgba(255,106,213,.16), transparent 60%),
-                                     #060612;
+      margin:0;color:var(--fg);
+      background:
+        radial-gradient(1000px 600px at 10% -10%, rgba(140,107,255,.25), transparent 60%),
+        radial-gradient(900px 700px at 100% 0%, rgba(57,189,255,.20), transparent 60%),
+        radial-gradient(800px 700px at 100% 100%, rgba(255,106,213,.16), transparent 60%),
+        #060612;
       font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
       -webkit-font-smoothing:antialiased;
     }
-    a{color:inherit;text-decoration:none}
     .wrap{max-width:980px;margin:0 auto;padding:16px 14px 28px;position:relative}
+    .muted{color:var(--muted)} .tiny{font-size:12px}
     .header{
       display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;
       position:sticky;top:0;z-index:9;background:linear-gradient(180deg, rgba(6,6,18,.9), rgba(6,6,18,.6));
       backdrop-filter:blur(6px);padding:10px;border-bottom:1px solid var(--border);
     }
-    .brand{
-      display:flex;align-items:center;gap:10px;
-    }
-    .logo{
-      width:34px;height:34px;border-radius:12px;
-      background:conic-gradient(from 0deg, var(--accent), var(--accent2), var(--accent3), var(--accent));
-      box-shadow: var(--glow);
-      position:relative;overflow:hidden;
-    }
-    .logo::after{
-      content:"";position:absolute;inset:2px;border-radius:10px;background:#09091a;
-    }
+    .brand{display:flex;align-items:center;gap:10px}
+    .logo{width:34px;height:34px;border-radius:12px;background:conic-gradient(from 0deg, var(--accent), var(--accent2), var(--accent3), var(--accent));box-shadow:var(--glow);position:relative;overflow:hidden}
+    .logo::after{content:"";position:absolute;inset:2px;border-radius:10px;background:#09091a}
     .title{font-weight:900;font-size:17px;letter-spacing:.3px}
-    .muted{color:var(--muted)}
+    .pill{border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:6px 10px;font-weight:900;background:rgba(255,255,255,.06)}
     .btn{
       appearance:none;border:1px solid var(--border);background:linear-gradient(90deg, rgba(140,107,255,.25), rgba(57,189,255,.2));
       color:#fff;border-radius:12px;padding:10px 14px;font-weight:900;cursor:pointer;
-      box-shadow:0 12px 40px rgba(140,107,255,.18);
-      transition:transform .12s ease, box-shadow .2s ease, filter .2s ease;
+      box-shadow:0 12px 40px rgba(140,107,255,.18);transition:transform .12s, box-shadow .2s, filter .2s;
     }
     .btn:hover{transform:translateY(-1px);filter:brightness(1.08)}
-    .btn:active{transform:translateY(0)}
-    .btn.primary{
-      background:linear-gradient(90deg, var(--accent), var(--accent2)); box-shadow:var(--glow);
-      border-color:transparent;
-    }
+    .btn.primary{background:linear-gradient(90deg, var(--accent), var(--accent2)); box-shadow:var(--glow); border-color:transparent}
     .btn.ghost{background:transparent}
-    .grid{
-      display:grid;gap:12px;
-    }
-    @media (min-width: 860px){ .grid.cols-3{grid-template-columns:repeat(3,1fr)} }
-    @media (min-width: 680px){ .grid.cols-2{grid-template-columns:repeat(2,1fr)} }
-    .card{
-      border:1px solid var(--border);border-radius:var(--radius);
-      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03));
-      overflow:hidden;position:relative;
-    }
+    .grid{display:grid;gap:12px}
+    @media (min-width:860px){ .grid.cols-2{grid-template-columns:repeat(2,1fr)} .grid.cols-3{grid-template-columns:repeat(3,1fr)} }
+    .card{border:1px solid var(--border);border-radius:var(--radius);background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.03))}
     .card.pad{padding:14px}
-    .glass{
-      border:1px solid var(--border);border-radius:var(--radius);
-      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      padding:14px;
-    }
-    h2{margin:0 0 10px 0;font-size:18px}
-    h3{margin:0 0 8px 0;font-size:16px}
-    .tiny{font-size:12px}
-    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-    .spacer{height:6px}
+    .glass{border:1px solid var(--border);border-radius:var(--radius);background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));padding:14px}
+    h2{margin:0 0 10px 0;font-size:18px} h3{margin:0 0 8px 0;font-size:16px}
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap} .spacer{height:6px}
     .divider{height:1px;background:linear-gradient(90deg, transparent, rgba(255,255,255,.18), transparent);margin:12px 0}
-    /* ====== СЛАЙДЕР ОТЗЫВОВ ====== */
-    .slider{
-      position:relative;height:140px;overflow:hidden;border-radius:12px;border:1px solid var(--border);
-      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
-    }
-    .slide{
-      position:absolute;inset:0;padding:14px 14px 22px 14px;opacity:0;transform:scale(.98);
-      transition:opacity .6s ease, transform .6s ease;
-      display:flex;align-items:center;gap:12px;
-    }
-    .slide.active{opacity:1;transform:scale(1)}
-    .ava{width:48px;height:48px;border-radius:999px;background:radial-gradient(circle at 30% 30%, #fff, #bbb);
-      border:2px solid rgba(255,255,255,.25);box-shadow:0 0 20px rgba(140,107,255,.35)}
-    .starline{color:#ffd147;text-shadow:0 0 12px rgba(255,209,71,.6)}
-    .dots{
-      position:absolute;left:0;right:0;bottom:6px;display:flex;justify-content:center;gap:6px;
-    }
-    .dot{width:7px;height:7px;border-radius:8px;background:rgba(255,255,255,.25);transition:width .3s}
-    .dot.active{background:linear-gradient(90deg, var(--accent), var(--accent2));box-shadow:var(--glow);width:22px}
-    /* ====== ОСНОВНЫЕ КНОПКИ ====== */
-    .actions{display:grid;gap:10px;grid-template-columns:repeat(2,1fr)}
-    @media (min-width:700px){ .actions{grid-template-columns:repeat(5,1fr)} }
-    .action{
-      padding:12px;border-radius:14px;border:1px solid var(--border);
-      background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
-      text-align:center;cursor:pointer;user-select:none;
-      transition:transform .12s ease, box-shadow .2s ease;
-    }
+    .actions{display:grid;gap:10px;grid-template-columns:repeat(2,1fr)} @media (min-width:700px){ .actions{grid-template-columns:repeat(5,1fr)} }
+    .action{padding:12px;border-radius:14px;border:1px solid var(--border);background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));text-align:center;cursor:pointer;user-select:none;transition:transform .12s, box-shadow .2s}
     .action:hover{transform:translateY(-2px);box-shadow:var(--glow)}
-    .ico{
-      font-size:22px;margin-bottom:6px;display:inline-block;
-      filter:drop-shadow(0 0 12px rgba(140,107,255,.65));
-    }
-    /* ====== БОКСЫ В PANELS ====== */
-    input[type="text"], input[type="time"], input[type="number"], select{
-      appearance:none;border:1px solid var(--border);border-radius:10px;padding:10px 12px;
-      background:rgba(255,255,255,.03);color:var(--fg);outline:none;min-width:140px;
+    .ico{font-size:22px;margin-bottom:6px;display:inline-block;filter:drop-shadow(0 0 12px rgba(140,107,255,.65))}
+    input[type="text"],input[type="time"],input[type="number"],select{
+      appearance:none;border:1px solid var(--border);border-radius:10px;padding:10px 12px;background:rgba(255,255,255,.03);color:var(--fg);outline:none;min-width:140px
     }
     input[type="range"]{width:220px}
-    .pill{
-      border:1px solid rgba(255,255,255,.2);border-radius:999px;padding:6px 10px;font-weight:900;
-      background:rgba(255,255,255,.06)
-    }
-    /* ====== ШОП-ШИТ ====== */
+    /* Slider */
+    .slider{position:relative;height:140px;overflow:hidden;border-radius:12px;border:1px solid var(--border);background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02))}
+    .slide{position:absolute;inset:0;padding:14px 14px 22px 14px;opacity:0;transform:scale(.98);transition:opacity .6s, transform .6s;display:flex;align-items:center;gap:12px}
+    .slide.active{opacity:1;transform:scale(1)}
+    .ava{width:48px;height:48px;border-radius:999px;background:radial-gradient(circle at 30% 30%, #fff, #bbb);border:2px solid rgba(255,255,255,.25);box-shadow:0 0 20px rgba(140,107,255,.35)}
+    .starline{color:#ffd147;text-shadow:0 0 12px rgba(255,209,71,.6)}
+    .dots{position:absolute;left:0;right:0;bottom:6px;display:flex;justify-content:center;gap:6px}
+    .dot{width:7px;height:7px;border-radius:8px;background:rgba(255,255,255,.25);transition:width .3s}
+    .dot.active{background:linear-gradient(90deg, var(--accent), var(--accent2));box-shadow:var(--glow);width:22px}
+    /* Bottom sheet shop */
     .sheet{position:fixed;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(8px);display:none;align-items:flex-end;z-index:50}
     .sheet.open{display:flex}
-    .box{
-      background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));
-      border-top:1px solid var(--border);width:100%;max-width:980px;margin:0 auto;border-radius:16px 16px 0 0;padding:14px;
-    }
+    .box{background:linear-gradient(180deg, rgba(255,255,255,.06), rgba(255,255,255,.03));border-top:1px solid var(--border);width:100%;max-width:980px;margin:0 auto;border-radius:16px 16px 0 0;padding:14px}
     .packs{display:grid;gap:10px}
     .pack{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:center;border:1px solid var(--border);border-radius:12px;padding:10px}
-    @media (max-width:520px){ .pack{grid-template-columns:1fr;align-items:stretch} }
-    /* ====== ТАБЫ ====== */
+    @media (max-width:520px){ .pack{grid-template-columns:1fr} }
+    /* Tabs & pages */
     .tabs{display:flex;gap:8px;flex-wrap:wrap}
-    .tab{
-      padding:8px 12px;border-radius:999px;border:1px solid var(--border);
-      background:linear-gradient(90deg, rgba(140,107,255,.15), rgba(57,189,255,.12));cursor:pointer;font-weight:900;
-    }
+    .tab{padding:8px 12px;border-radius:999px;border:1px solid var(--border);background:linear-gradient(90deg, rgba(140,107,255,.15), rgba(57,189,255,.12));cursor:pointer;font-weight:900}
     .tab.active{background:linear-gradient(90deg, var(--accent), var(--accent2));box-shadow:var(--glow)}
-    /* ====== СТРАНИЦЫ ====== */
     .page{display:none;animation:fadeIn .35s ease both}
     .page.active{display:block}
     @keyframes fadeIn{from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none}}
-    /* ====== ГОРОСКОП ====== */
+    /* Horoscope */
     .zodiac-grid{display:grid;gap:10px;grid-template-columns:repeat(2,1fr)}
     @media (min-width:680px){ .zodiac-grid{grid-template-columns:repeat(6,1fr)} }
-    .z-card{
-      border:1px solid var(--border);border-radius:14px;padding:12px;text-align:center;cursor:pointer;
-      background:radial-gradient(200px 120px at 50% 0%, rgba(140,107,255,.22), rgba(255,255,255,.02));
-      transition:transform .12s ease, box-shadow .2s ease, border-color .2s ease;
-    }
+    .z-card{border:1px solid var(--border);border-radius:14px;padding:12px;text-align:center;cursor:pointer;background:radial-gradient(200px 120px at 50% 0%, rgba(140,107,255,.22), rgba(255,255,255,.02));transition:transform .12s, box-shadow .2s, border-color .2s}
     .z-card:hover{transform:translateY(-2px);box-shadow:var(--glow);border-color:rgba(140,107,255,.5)}
     .z-ico{font-size:26px;display:block;margin-bottom:6px;filter:drop-shadow(0 0 10px rgba(140,107,255,.6))}
-    .subtle{opacity:.9}
     .footnote{font-size:12px;color:var(--muted);text-align:center;margin-top:10px}
   </style>
 </head>
 <body>
   <div class="wrap">
-    <!-- HEADER -->
+    <!-- Header -->
     <div class="header">
       <div class="brand">
         <div class="logo"></div>
@@ -183,44 +107,32 @@
       </div>
     </div>
 
-    <!-- TABS -->
+    <!-- Tabs -->
     <div class="row tabs" style="margin:8px 2px 12px 2px">
       <div class="tab active" data-page="home">Главная</div>
       <div class="tab" data-page="horoscope">Гороскоп</div>
       <div class="tab" data-page="more">Ещё</div>
     </div>
 
-    <!-- PAGE: HOME -->
+    <!-- Page: Home -->
     <section class="page active" id="page-home">
-      <!-- СЛАЙДЕР ОТЗЫВОВ + CTA -->
       <div class="grid cols-2">
         <div class="card">
           <div class="slider" id="slider">
             <div class="slide active">
               <div class="ava"></div>
-              <div>
-                <div class="starline">★★★★★</div>
-                «Бот попал в точку по моему вопросу. Эффектно и бережно.» — Анна
-              </div>
+              <div><div class="starline">★★★★★</div>«Бот попал в точку! Эффектно и бережно.» — Анна</div>
             </div>
             <div class="slide">
               <div class="ava"></div>
-              <div>
-                <div class="starline">★★★★★</div>
-                «Купил пакет, расклады шикарные, визуал огонь!» — Дмитрий
-              </div>
+              <div><div class="starline">★★★★★</div>«Пакет купил, расклады шикарные, визуал огонь!» — Дмитрий</div>
             </div>
             <div class="slide">
               <div class="ava"></div>
-              <div>
-                <div class="starline">★★★★★</div>
-                «Карта дня стала утренним ритуалом. Спасибо!» — Марина
-              </div>
+              <div><div class="starline">★★★★★</div>«Карта дня — мой утренний ритуал. Спасибо!» — Марина</div>
             </div>
             <div class="dots" id="dots">
-              <div class="dot active"></div>
-              <div class="dot"></div>
-              <div class="dot"></div>
+              <div class="dot active"></div><div class="dot"></div><div class="dot"></div>
             </div>
           </div>
         </div>
@@ -238,7 +150,6 @@
 
       <div class="spacer"></div>
 
-      <!-- КОНСТРУКТОР РАСКЛАДА -->
       <div class="card pad">
         <h2>Конструктор расклада</h2>
         <div class="row">
@@ -254,7 +165,6 @@
 
       <div class="spacer"></div>
 
-      <!-- ПОДПИСКА / ПРОМО / ШАБЛОНЫ -->
       <div class="grid cols-3">
         <div class="card pad">
           <h3>Подписка «Карта дня»</h3>
@@ -303,22 +213,15 @@
       <div class="footnote">1 ответ ИИ или расклад = 1 сообщение. Баланс пополняется в разделе «Пополнить».</div>
     </section>
 
-    <!-- PAGE: HOROSCOPE -->
+    <!-- Page: Horoscope -->
     <section class="page" id="page-horoscope">
-      <div class="card pad" style="position:relative; overflow:hidden">
-        <h2 style="display:flex;align-items:center;gap:10px">
-          <span style="filter:drop-shadow(0 0 10px rgba(255,106,213,.6))">✨</span>
-          Магический гороскоп
-        </h2>
+      <div class="card pad">
+        <h2 style="display:flex;align-items:center;gap:10px"><span style="filter:drop-shadow(0 0 10px rgba(255,106,213,.6))">✨</span>Магический гороскоп</h2>
         <div class="row" style="margin-top:6px">
           <span class="muted">Период:</span>
-          <select id="horPeriod">
-            <option value="today">Сегодня</option>
-            <option value="week">Неделя</option>
-          </select>
+          <select id="horPeriod"><option value="today">Сегодня</option><option value="week">Неделя</option></select>
         </div>
         <div class="zodiac-grid" style="margin-top:10px">
-          <!-- 12 знаков -->
           <div class="z-card" data-sign="aries"><span class="z-ico">♈</span>Овен</div>
           <div class="z-card" data-sign="taurus"><span class="z-ico">♉</span>Телец</div>
           <div class="z-card" data-sign="gemini"><span class="z-ico">♊</span>Близнецы</div>
@@ -336,7 +239,7 @@
       </div>
     </section>
 
-    <!-- PAGE: MORE -->
+    <!-- Page: More -->
     <section class="page" id="page-more">
       <div class="grid cols-2">
         <div class="card pad">
@@ -349,12 +252,12 @@
         </div>
         <div class="card pad">
           <h2>О приложении</h2>
-          <div class="muted">Нейро‑таро с визуальными раскладами, быстрыми ответами и магической эстетикой. Добро пожаловать в мир символов.</div>
+          <div class="muted">Нейро‑таро с визуальными раскладами, быстрыми ответами и магической эстетикой.</div>
         </div>
       </div>
     </section>
 
-    <!-- ПОПОЛНЕНИЕ -->
+    <!-- Shop -->
     <div class="sheet" id="shop">
       <div class="box">
         <div class="row" style="justify-content:space-between">
@@ -362,66 +265,68 @@
           <button class="btn ghost" id="shopClose">Закрыть</button>
         </div>
         <div class="packs" style="margin-top:10px">
-          <div class="pack">
-            <div><span class="pill">100 сообщений</span></div>
-            <div class="muted">250 ₽</div>
-            <div><button class="btn primary buy" data-qty="100">Купить</button></div>
-          </div>
-          <div class="pack">
-            <div><span class="pill">300 сообщений</span> <span class="pill" style="border-style:dashed">−10%</span></div>
-            <div class="muted">725 ₽</div>
-            <div><button class="btn primary buy" data-qty="300">Купить</button></div>
-          </div>
-          <div class="pack">
-            <div><span class="pill">500 сообщений</span> <span class="pill" style="border-style:dashed">−15%</span></div>
-            <div class="muted">1180 ₽</div>
-            <div><button class="btn primary buy" data-qty="500">Купить</button></div>
-          </div>
-          <div class="pack">
-            <div><span class="pill">1000 сообщений</span> <span class="pill" style="border-style:dashed">−20%</span></div>
-            <div class="muted">2250 ₽</div>
-            <div><button class="btn primary buy" data-qty="1000">Купить</button></div>
-          </div>
+          <div class="pack"><div><span class="pill">100 сообщений</span></div><div class="muted">250 ₽</div><div><button class="btn primary buy" data-qty="100">Купить</button></div></div>
+          <div class="pack"><div><span class="pill">300 сообщений</span> <span class="pill" style="border-style:dashed">−10%</span></div><div class="muted">725 ₽</div><div><button class="btn primary buy" data-qty="300">Купить</button></div></div>
+          <div class="pack"><div><span class="pill">500 сообщений</span> <span class="pill" style="border-style:dashed">−15%</span></div><div class="muted">1180 ₽</div><div><button class="btn primary buy" data-qty="500">Купить</button></div></div>
+          <div class="pack"><div><span class="pill">1000 сообщений</span> <span class="pill" style="border-style:dashed">−20%</span></div><div class="muted">2250 ₽</div><div><button class="btn primary buy" data-qty="1000">Купить</button></div></div>
         </div>
       </div>
     </div>
 
-    <div class="footnote subtle" id="dbg">Готово</div>
+    <div class="footnote" id="dbg">DEV</div>
   </div>
 
+  <!-- DEV STUB: делает страницу кликабельной вне Telegram -->
   <script>
-    // ====== Telegram SDK ======
+    (function ensureTelegramStub(){
+      if (!window.Telegram) window.Telegram = {};
+      if (!window.Telegram.WebApp) {
+        window.Telegram.WebApp = {
+          sendData: (p)=> { console.log('[DEV] sendData:', p); alert('DEV SEND:\\n' + p); },
+          close: ()=> console.log('[DEV] close'),
+          openLink: (url)=> window.open(url, '_blank'),
+          ready: ()=> console.log('[DEV] ready'),
+          expand: ()=> console.log('[DEV] expand'),
+          initDataUnsafe: { user: { id: 123456, username: 'dev_user' } },
+          HapticFeedback: { impactOccurred: ()=>{} }
+        };
+        console.log('[DEV] Telegram WebApp stub enabled');
+      }
+    })();
+  </script>
+
+  <script>
     const tg = window.Telegram && window.Telegram.WebApp;
+    const isDev = !!(tg && tg.initDataUnsafe && tg.initDataUnsafe.user && tg.initDataUnsafe.user.username === 'dev_user');
+
     function haptic(type='light'){ try{ Telegram.WebApp.HapticFeedback?.impactOccurred(type); }catch(_){} }
     function dbg(msg){ const el = document.getElementById('dbg'); if(el) el.textContent = String(msg); }
+
+    // Отправка: в DEV просто alert, в Telegram — sendData и закрытие
     function send(action, extra={}){
       const payload = JSON.stringify({ action, ...extra });
       try { tg.sendData(payload); } catch (e) { console.error("sendData error:", e); dbg("Ошибка отправки"); }
-      // Закрыть сразу — критично для Desktop, чтобы событие пришло
-      try { tg.close(); } catch(_) {}
+      if (!isDev) { try { tg.close(); } catch(_) {} } // локально не закрываем
     }
 
-    // ====== INIT ======
     function initTelegram(){
       try{
         tg.ready(); tg.expand();
         const u = tg.initDataUnsafe?.user;
-        if (u) document.getElementById('u.id}`;
+        if (u) document.getElementById('hello').textContent = `@${u.username || 'user'} • id ${u.id}`;
+        dbg(isDev ? 'DEV режим: клики показывают payload' : 'Готово • Нажмите любую кнопку — ответ придёт в чат');
       }catch(e){ console.warn("TG init error", e); }
     }
 
-    // ====== CLOCK ======
     const fmt = new Intl.DateTimeFormat('ru-RU',{hour:'2-digit',minute:'2-digit'});
     function tick(){ const el=document.getElementById('clock'); if(el) el.textContent = fmt.format(new Date()); }
-    tick(); setInterval(tick, 30_000);
+    function initClock(){ tick(); setInterval(tick, 30_000); }
 
-    // ====== SLIDER ======
-    const slides = []; const dots = [];
     function initSlider(){
-      const sWrap = document.getElementById('slider'); if(!sWrap) return;
-      sWrap.querySelectorAll('.slide').forEach(el=>slides.push(el));
-      sWrap.querySelectorAll('.dot').forEach(el=>dots.push(el));
-      let i=0;
+      const host = document.getElementById('slider'); if(!host) return;
+      const slides = Array.from(host.querySelectorAll('.slide'));
+      const dots = Array.from(host.querySelectorAll('.dot'));
+      let i = 0;
       setInterval(()=>{
         slides[i].classList.remove('active'); dots[i].classList.remove('active');
         i = (i+1) % slides.length;
@@ -429,7 +334,6 @@
       }, 3800);
     }
 
-    // ====== TABS ======
     function initTabs(){
       document.querySelectorAll('.tab').forEach(t=>{
         t.addEventListener('click', ()=>{
@@ -443,35 +347,22 @@
       });
     }
 
-    // ====== ACTIONS ======
-    function bindCoreActions(){
-      // Шапка
-      document.getElementById('btnTopup')?.addEventListener('click', ()=>{
-        document.getElementById('shop').classList.add('open'); haptic();
-      });
-      document.getElementById('shopClose')?.addEventListener('click', ()=>{
-        document.getElementById('shop').classList.remove('open'); haptic();
-      });
-      document.querySelectorAll('.buy').forEach(b=>{
-        b.addEventListener('click', ()=>{
-          const qty = parseInt(b.getAttribute('data-qty'), 10) || 100;
-          haptic('medium'); send('buy', {qty});
-        });
-      });
+    function bindActions(){
+      // Shop
+      document.getElementById('btnTopup')?.addEventListener('click', ()=>{ document.getElementById('shop').classList.add('open'); haptic(); });
+      document.getElementById('shopClose')?.addEventListener('click', ()=>{ document.getElementById('shop').classList.remove('open'); haptic(); });
+      document.querySelectorAll('.buy').forEach(b=> b.addEventListener('click', ()=>{ const qty=parseInt(b.getAttribute('data-qty'),10)||100; haptic('medium'); send('buy', {qty}); }));
 
-      // Главные действия
+      // Основные действия
       document.querySelectorAll('.action').forEach(el=>{
         el.addEventListener('click', ()=>{
-          const act = el.getAttribute('data-act');
-          haptic();
+          const act = el.getAttribute('data-act'); haptic();
           if (act === 'ask'){
-            const q = prompt('Введите ваш вопрос (мы сделаем расклад из 3 карт):');
-            if (!q) return;
+            const q = prompt('Введите ваш вопрос (сделаем расклад из 3 карт):'); if (!q) return;
             return send('custom_spread', { n: 3, topic: q });
           }
           if (act === 'yes_no'){
-            const q = prompt('Ваш вопрос в формате Да/Нет:');
-            if (!q) return;
+            const q = prompt('Ваш вопрос (Да/Нет):'); if (!q) return;
             return send('yes_no', { question: q });
           }
           return send(act);
@@ -495,39 +386,20 @@
         send('cod_sub', { on, time });
       });
 
-      // Промокод
+      // Промокод / Реферал / История / Поддержка
       document.getElementById('btnPromo')?.addEventListener('click', ()=>{
-        const code = (document.getElementById('promoInput').value || '').trim();
-        if (!code) return;
+        const code = (document.getElementById('promoInput').value || '').trim(); if (!code) return;
         send('promo', { code });
       });
-
-      // Рефералка / История / Поддержка
-      document.getElementById('btnRef')?.addEventListener('click', ()=>{ send('ref_show'); });
-      document.getElementById('btnHistory')?.addEventListener('click', ()=>{ send('history'); });
+      document.getElementById('btnRef')?.addEventListener('click', ()=> send('ref_show'));
+      document.getElementById('btnHistory')?.addEventListener('click', ()=> send('history'));
       document.getElementById('btnSupport')?.addEventListener('click', ()=>{
-        // Замените ссылку поддержки на свою
         try { tg.openLink('https://t.me/your_support'); } catch(_) { send('support'); }
       });
 
-      // Страница "Ещё"
+      // Страница Ещё
       document.getElementById('btnBalance')?.addEventListener('click', ()=> send('balance'));
       document.getElementById('btnPing')?.addEventListener('click', ()=> send('ping', {ts: Date.now()}));
-
-      // Быстрые темы
-      document.querySelectorAll('.fast').forEach(btn=>{
-        btn.addEventListener('click', ()=>{
-          const n = parseInt(btn.getAttribute('data-n'), 10) || 5;
-          const topic = btn.getAttribute('data-topic') || '';
-          send('custom_spread', { n, topic });
-        });
-      });
-      document.querySelectorAll('.fast-yn').forEach(btn=>{
-        btn.addEventListener('click', ()=>{
-          const topic = btn.getAttribute('data-topic') || 'Мой шанс?';
-          send('yes_no', { question: topic });
-        });
-      });
 
       // Гороскоп
       document.querySelectorAll('.z-card').forEach(card=>{
@@ -539,13 +411,12 @@
       });
     }
 
-    // ====== STARTUP ======
     function start(){
       initTelegram();
+      initClock();
       initSlider();
       initTabs();
-      bindCoreActions();
-      dbg('Готово • Нажмите любую кнопку — ответ придёт в чат');
+      bindActions();
     }
 
     document.addEventListener('DOMContentLoaded', start);
