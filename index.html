@@ -6,178 +6,109 @@
   <title>AI Tarot • Меню</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
-    :root{
-      --bg:#070814; --text:#f4f1ff; --muted:#b7b3d6; --card:#0f1224;
-      --border: rgba(255,255,255,.10); --radius:18px;
-      --accent1:#8c6bff; --accent2:#39bdff; --accent3:#ff7ad9;
-    }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{margin:0;color:var(--text);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;background:var(--bg)}
-    .wrap{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:20px 18px 28px}
-    header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px}
-    h1{margin:0;font-size:22px}
+    :root{ --bg:#070814; --text:#f4f1ff; --muted:#b7b3d6; --card:#0f1224; --border:rgba(255,255,255,.1); }
+    *{box-sizing:border-box} html,body{height:100%}
+    body{margin:0;background:var(--bg);color:var(--text);font:16px/1.45 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+    .wrap{max-width:760px;margin:0 auto;padding:18px}
+    h1{margin:0 0 8px 0;font-size:22px}
     .muted{color:var(--muted);font-size:13px}
-    .panel{background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
-      border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-top:14px}
-    .bar{display:flex;align-items:center;gap:10px;margin-top:6px;flex-wrap:wrap}
-    .num{font-size:32px;font-weight:1000}
-    .btn{
-      appearance:none;cursor:pointer;border:0;border-radius:12px;padding:12px 16px;
-      background:linear-gradient(90deg, var(--accent1), var(--accent2)); color:#fff;font-weight:900;
-      box-shadow:0 14px 46px rgba(140,107,255,.35)
-    }
-    .btn.ghost{background:transparent;border:1px solid var(--border);box-shadow:none;color:var(--text)}
-    .cards{display:grid;gap:12px;margin-top:12px}
-    @media (min-width:780px){ .cards{grid-template-columns:repeat(4,1fr)} }
-    .tile{border:1px solid var(--border);border-radius:16px;padding:14px;min-height:90px;display:flex;align-items:flex-end;cursor:pointer}
-    .tile:hover{outline:2px solid rgba(137,121,255,.35)}
-    .sheet{position:fixed;inset:0;background:rgba(0,0,0,.5);backdrop-filter:blur(8px);display:none;align-items:flex-end;z-index:5}
-    .sheet.open{display:flex}
-    .sheet .box{background:var(--card);border:1px solid var(--border);border-radius:18px 18px 0 0;padding:14px;width:100%;max-width:960px;margin:0 auto}
-    .packs{display:grid;gap:12px;margin-top:12px}
-    .pack{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:center;padding:12px 12px;border:1px solid var(--border);border-radius:14px}
-    .pill{border:1px solid rgba(255,255,255,.18);border-radius:999px;padding:6px 12px;font-weight:900;background:rgba(255,255,255,.06)}
-    .badge{font-size:12px;color:#fff;padding:4px 8px;border-radius:10px;background:rgba(255,255,255,.08);border:1px dashed rgba(255,255,255,.18)}
-    .price{font-weight:1000;white-space:nowrap}
-    @media (max-width:420px){ .pack{grid-template-columns:1fr} }
+    .panel{margin-top:14px;padding:14px;border:1px solid var(--border);border-radius:14px;background:rgba(255,255,255,.04)}
+    .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}
+    button{appearance:none;cursor:pointer;border:0;border-radius:12px;padding:12px 16px;font-weight:800}
+    .btn{background:linear-gradient(90deg, #8c6bff, #39bdff);color:#fff}
+    .ghost{background:transparent;border:1px solid var(--border);color:var(--text)}
     .dbg{position:fixed;right:8px;bottom:8px;background:rgba(0,0,0,.45);border:1px solid var(--border);border-radius:10px;padding:8px 10px;font-size:12px;color:#ddd;max-width:70vw;z-index:9}
-    .dbg b{color:#fff}
   </style>
 </head>
 <body>
-  <div class="wrap" id="root">
-    <header>
-      <div>
-        <h1>Меню таро</h1>
-        <div class="muted" id="user">@user</div>
-      </div>
-      <div class="top">
-        <button class="btn" id="btnTopup">Пополнить</button>
-      </div>
-    </header>
+  <div class="wrap">
+    <h1>Меню таро</h1>
+    <div class="muted" id="user">@user</div>
 
-    <section class="panel">
-      <h3>Баланс</h3>
-      <div class="bar">
-        <div class="num" id="balanceNum">—</div>
-        <div class="muted">сообщений</div>
-        <div class="muted" style="margin-left:auto" id="clock">—:—</div>
+    <div class="panel">
+      <div class="row">
+        <button class="btn"   id="btnBalance">Обновить баланс</button>
+        <button class="ghost" id="btnPing">Пинг</button>
       </div>
-      <div class="bar">
-        <button class="btn ghost" id="btnBalance">Обновить баланс</button>
-        <button class="btn ghost" id="btnPing">Пинг</button>
-      </div>
-      <div class="muted">1 ответ ИИ или один расклад = 1 сообщение</div>
-    </section>
+    </div>
 
-    <section class="panel">
-      <h3>Расклады</h3>
-      <div class="cards">
-        <div class="tile" data-act="card_of_day"><div class="label">Карта дня</div></div>
-        <div class="tile" data-act="three"><div class="label">3 карты</div></div>
-        <div class="tile" data-act="yes_no"><div class="label">Да / Нет</div></div>
-        <div class="tile" data-act="week"><div class="label">Неделя</div></div>
+    <div class="panel">
+      <div class="row">
+        <button class="btn" data-act="card_of_day">Карта дня</button>
+        <button class="btn" data-act="three">3 карты</button>
+        <button class="btn" data-act="yes_no">Да / Нет</button>
+        <button class="btn" data-act="week">Неделя</button>
       </div>
-    </section>
-  </div>
+    </div>
 
-  <!-- Магазин -->
-  <div class="sheet" id="shop">
-    <div class="box">
-      <div style="display:flex;justify-content:space-between;align-items:center">
-        <h3 style="margin:0">Купить сообщения</h3>
-        <button class="btn ghost close" id="closeShop">Закрыть</button>
+    <div class="panel">
+      <div class="row">
+        <button class="ghost" data-buy="100">Купить 100</button>
+        <button class="ghost" data-buy="300">Купить 300</button>
       </div>
-      <div class="packs" id="packs"></div>
     </div>
   </div>
 
   <div class="dbg" id="dbg">init…</div>
 
   <script>
-    const tg = window.Telegram?.WebApp;
-    const dbg = (msg)=>{ const el = document.getElementById('dbg'); el.textContent = msg; };
+    const tg = window.Telegram && window.Telegram.WebApp;
+    const dbg = (t)=>{ const el = document.getElementById('dbg'); if (el) el.textContent = String(t); };
+    function alertSafe(msg){ try{ tg.showAlert(String(msg)); }catch(_){ console.log("ALERT:", msg); } dbg(msg); }
 
-    function alertSafe(text){
-      try { tg?.showAlert(String(text)); } catch(e){ console.log('alert:', text); }
-      dbg(String(text));
+    // Критично: отправить и СРАЗУ закрыть WebApp, чтобы событие пришло в чат (Desktop/Mobile).
+    function send(action, extra = {}) {
+      const payload = JSON.stringify({ action, ...extra });
+      try { tg.sendData(payload); } catch (e) { alertSafe("sendData error: " + (e?.message || e)); return; }
+      try { tg.close(); } catch (_) {}
     }
 
-    // Жёсткая отправка: отправить и закрыть WebApp (нужно для некоторых клиентов Telegram)
-    function send(action, extra = {}, autoClose = true){
-      const payload = JSON.stringify({action, ...extra});
-      try { tg?.showAlert?.("SEND: " + payload); } catch(_) {}
-      try { tg?.sendData?.(payload); } catch(e){
-        try { tg?.showAlert?.("sendData error: " + (e?.message || e)); } catch(_) {}
-        console.error(e);
-        return;
+    function bindClicks(){
+      document.getElementById('btnPing')?.addEventListener('click', ()=> send('ping', {ts: Date.now()}));
+      document.getElementById('btnBalance')?.addEventListener('click', ()=> send('balance'));
+
+      document.querySelectorAll('[data-act]').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const act = btn.getAttribute('data-act');
+          if (act === 'yes_no') {
+            const q = prompt('Введите ваш вопрос (Да/Нет):');
+            if (!q) return;
+            return send('yes_no', {question: q});
+          }
+          return send(act);
+        });
+      });
+
+      document.querySelectorAll('[data-buy]').forEach(btn=>{
+        btn.addEventListener('click', ()=>{
+          const qty = parseInt(btn.getAttribute('data-buy'), 10) || 100;
+          return send('buy', {qty});
+        });
+      });
+    }
+
+    function init(){
+      try {
+        tg.ready();
+        tg.expand();
+        // Не включаем подтверждение закрытия, чтобы close() сработал без диалога:
+        // tg.enableClosingConfirmation();
+        try {
+          const u = tg.initDataUnsafe?.user;
+          if (u) document.getElementById('user').textContent = `@${u.username || 'user'} • id ${u.id}`;
+        } catch(_){}
+        bindClicks();
+        alertSafe("WebApp готов");
+      } catch (e) {
+        console.error("TG init error", e);
+        dbg("TG init error: " + (e?.message || e));
       }
-      if (autoClose){
-        try { tg?.disableClosingConfirmation?.(); } catch(_) {}
-        // без задержки — событие приходит сразу после закрытия окна
-        try { tg?.close?.(); } catch(_) {}
-      }
     }
 
-    // Init Telegram WebApp
-    try {
-      tg.ready();
-      tg.expand();               // максимум высоты
-      // tg.enableClosingConfirmation();  // НЕ включаем, чтобы close() не спрашивал подтверждение
-      tg.onEvent('themeChanged', ()=>{});
-    } catch (e) {
-      console.warn('TG init error', e);
+    document.addEventListener('DOMContentLoaded', init);
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      setTimeout(init, 0);
     }
-
-    // Header color безопасно
-    try { tg.setHeaderColor(tg.colorScheme === 'dark' ? '#070814' : '#ffffff'); } catch(e){}
-
-    // Пользователь
-    try {
-      const u = tg.initDataUnsafe?.user;
-      if (u) document.getElementById('user').textContent = `@${u.username || 'user'}  •  id ${u.id}`;
-    } catch(e){}
-
-    // Часы
-    const fmt = new Intl.DateTimeFormat('ru-RU', {hour:'2-digit',minute:'2-digit'});
-    const setClock = ()=> document.getElementById('clock').textContent = fmt.format(new Date());
-    setClock(); setInterval(setClock, 30_000);
-
-    // Кнопки баланса и пинга
-    document.getElementById('btnBalance').onclick = ()=> send('balance');
-    document.getElementById('btnPing').onclick    = ()=> send('ping', {ts: Date.now()});
-
-    // Плитки раскладов
-    document.querySelectorAll('.tile').forEach(el=>{
-      el.addEventListener('click', ()=>{
-        const act = el.dataset.act;
-        if (act === 'yes_no') {
-          const q = prompt('Введите ваш вопрос (Да/Нет):');
-          if (!q) return;
-          return send('yes_no},
-      {qty:300,  priceRub:725,  discount:10},
-      {qty:500,  priceRub:1180, discount:15},
-      {qty:1000, priceRub:2250, discount:20}
-    ];
-    const packs = document.getElementById('packs');
-    packsData.forEach(p=>{
-      const row = document.createElement('div');
-      row.className = 'pack';
-      row.innerHTML = `
-        <div class="left">
-          <span class="pill">${p.qty} сообщений</span>
-          ${p.discount? `<span class="badge">−${p.discount}%</span>`:'' const btn = e.target.closest('button[data-qty]');
-      if (btn) { send('buy', {qty: parseInt(btn.dataset.qty,10)}); shop.classList.remove('open'); }
-    });
-
-    // Глобальная отладка кликов
-    window.addEventListener('click', (e)=>{ console.log('click', e.target); });
-    window.onerror = function(msg, src, line, col, err) {
-      alertSafe("JS error: " + msg + " @" + line + ":" + col);
-    };
-
-    alertSafe("WebApp готов");
   </script>
 </body>
 </html>
