@@ -182,7 +182,7 @@ function imgForCard(c){ 
 }
 
 // Создание карты для отображения
-function cardHtml(c) { 
+function cardHtml(c, i = 0) {
   const img = imgForCard(c); 
   const m = c.pos ? (c.rev ? `тень: переосмысление` : c.pos) : (c.rev ? 'скрытые аспекты' : 'ситуация/энергия'); 
   
@@ -191,7 +191,7 @@ function cardHtml(c) { 
     `<div style="display:flex;align-items:center;justify-content:center;height:100%;background:radial-gradient(320px 220px at 50% 0%, rgba(140,107,255,.22), rgba(255,255,255,.02));font-weight:900;padding:10px;text-align:center;font-size:14px;">${c.name}</div>`;
   
   return `
-    <div class="tcard" tabindex="0">
+    <div class="tcard" tabindex="0" style="animation-delay: ${i * 100}ms">
       <div class="tface tfront">
         ${frontContent}
       </div>
@@ -206,7 +206,7 @@ function cardHtml(c) { 
 
 // Отображение карт
 function renderCards(cards, isSmall=false){ 
-  return `<div class="cards ${isSmall ? 'small' : ''}">${cards.map(cardHtml).join('')}</div>`; 
+  return `<div class="cards ${isSmall ? 'small' : ''}">${cards.map((card, i) => cardHtml(card, i)).join('')}</div>`;
 }
 
 function enableFlipListeners(scope=document){ 
@@ -530,9 +530,24 @@ function cardsToText(cards){ 
   return cards.map((c,i)=>`${i+1}. ${c.name}${c.rev?' (перевёрнутая)':''}${c.suit?` — ${c.suit}`:''}`).join('\n'); 
 }
 
-function showSpreadResult(title, cards, text) { 
-  const html = `<div class="result-section">${renderCards(cards)}${mdToHtml(text)}<div class="tiny muted" style="margin-top:8px">Нажмите на карту, чтобы перевернуть.</div></div>`; 
-  showResult(title, html); 
+function showSpreadResult(title, cards, text, spreadData) {
+  const html = `<div class="result-section">
+    ${renderCards(cards)}
+    ${mdToHtml(text)}
+    <div class="tiny muted" style="margin-top:8px; text-align: center;">Нажмите на карту, чтобы перевернуть.</div>
+    <div style="margin-top: 16px; text-align: center;">
+      <button class="btn primary" id="shareSpreadBtn">Поделиться в чате</button>
+    </div>
+  </div>`;
+  showResult(title, html);
+  const shareBtn = document.getElementById('shareSpreadBtn');
+  if (shareBtn) {
+    shareBtn.addEventListener('click', () => {
+      sendToBot(spreadData);
+      toast('Расклад отправлен в ваш чат с ботом!');
+      haptic('success');
+    });
+  }
 }
 
 async function runCardOfDay(){ 
@@ -544,16 +559,14 @@ async function runCardOfDay(){ 
     // ОЧИЩАЕМ ОТВЕТ
     const cleanText = cleanAiResponse(text);
     
-    addHistory('spread', 'Карта дня', { cards, text: cleanText }); 
-    
-    sendToBot({
-      spreadType: 'card_of_day',
-      title: 'Карта дня',
-      cards: cards,
-      interpretation: cleanText
-    });
-    
-    showSpreadResult('Карта дня', cards, cleanText); 
+    addHistory('spread', 'Карта дня', { cards, text: cleanText });
+    const spreadData = {
+      spreadType: 'card_of_day',
+      title: 'Карта дня',
+      cards: cards,
+      interpretation: cleanText
+    };
+    showSpreadResult('Карта дня', cards, cleanText, spreadData);
   } catch(e) { 
     console.error(e); 
     if (e.message !== 'groq_error') toast('Ошибка ИИ'); 
@@ -567,16 +580,14 @@ async function runWeek(){ 
   try{ 
     const cards = draw(5); 
     const text = await groq(SPREAD_SYSTEM_PROMPT, [{role:'user', content: `Вопрос: Прогноз на неделю\nКарты:\n${cardsToText(cards)}`}]); 
-    addHistory('spread', 'Неделя', { cards, text }); 
-    
-    sendToBot({
-      spreadType: 'week',
-      title: 'Неделя',
-      cards: cards,
-      interpretation: text
-    });
-    
-    showSpreadResult('Неделя', cards, text); 
+    addHistory('spread', 'Неделя', { cards, text });
+    const spreadData = {
+      spreadType: 'week',
+      title: 'Неделя',
+      cards: cards,
+      interpretation: text
+    };
+    showSpreadResult('Неделя', cards, text, spreadData);
   } catch(e){ 
     console.error(e); 
     if (e.message !== 'groq_error') toast('Ошибка ИИ'); 
@@ -592,17 +603,15 @@ async function runYesNo(){ 
   try{ 
     const cards = draw(2); 
     const text = await groq(SPREAD_SYSTEM_PROMPT, [{role: 'user', content: `Вопрос (Да/Нет): ${q}\nКарты:\n${cardsToText(cards)}\nОтветь "Да" или "Нет", затем дай нюанс и совет.`}]); 
-    addHistory('spread', 'Оракул Да/Нет', { cards, text, question: q }); 
-    
-    sendToBot({
-      spreadType: 'yes_no',
-      title: 'Оракул Да/Нет',
-      question: q,
-      cards: cards,
-      interpretation: text
-    });
-    
-    showSpreadResult('Оракул Да/Нет', cards, text); 
+    addHistory('spread', 'Оракул Да/Нет', { cards, text, question: q });
+    const spreadData = {
+      spreadType: 'yes_no',
+      title: 'Оракул Да/Нет',
+      question: q,
+      cards: cards,
+      interpretation: text
+    };
+    showSpreadResult('Оракул Да/Нет', cards, text, spreadData);
   } catch(e){ 
     console.error(e); 
     if (e.message !== 'groq_error') toast('Ошибка ИИ'); 
@@ -619,18 +628,16 @@ async function runCustom(){ 
     const cards = draw(Math.max(2, Math.min(10, n))); 
     const text = await groq(SPREAD_SYSTEM_PROMPT, [{role:'user', content: `Вопрос: ${topic || 'Общий расклад'}\nКарты:\n${cardsToText(cards)}`}]); 
     const title = `Расклад: ${topic||'Без темы'}`; 
-    addHistory('spread', title, { cards, text }); 
-    
-    sendToBot({
-      spreadType: 'custom',
-      title: title,
-      topic: topic,
-      cardCount: n,
-      cards: cards,
-      interpretation: text
-    });
-    
-    showSpreadResult(title, cards, text); 
+    addHistory('spread', title, { cards, text });
+    const spreadData = {
+      spreadType: 'custom',
+      title: title,
+      topic: topic,
+      cardCount: n,
+      cards: cards,
+      interpretation: text
+    };
+    showSpreadResult(title, cards, text, spreadData);
   } catch(e){ 
     console.error(e); 
     if (e.message !== 'groq_error') toast('Ошибка ИИ'); 
@@ -714,25 +721,24 @@ async function onAiSend(){ 
       // ОЧИЩАЕМ ТЕКСТ РАСКЛАДА
       const cleanSpreadText = cleanAiResponse(spreadText);
       
-      state.ai.push({ role: 'assistant', text: cleanSpreadText, cards: cards }); 
-      
-      sendToBot({
-        spreadType: 'ai_spread',
-        title: 'AI Расклад из чата',
-        question: q,
-        cards: cards,
-        interpretation: cleanSpreadText
-      });
-      
+      state.ai.push({ role: 'assistant', text: cleanSpreadText, cards: cards });
+      const spreadData = {
+        spreadType: 'ai_spread',
+        title: 'AI Расклад из чата',
+        question: q,
+        cards: cards,
+        interpretation: cleanSpreadText
+      };
+      sendToBot(spreadData);
     } else { 
-      state.ai.push({ role: 'assistant', text: cleanResponse }); 
-      
-      sendToBot({
-        spreadType: 'ai_chat',
-        title: 'AI Чат',
-        question: q,
-        answer: cleanResponse
-      });
+      state.ai.push({ role: 'assistant', text: cleanResponse });
+      const chatData = {
+        spreadType: 'ai_chat',
+        title: 'AI Чат',
+        question: q,
+        answer: cleanResponse
+      };
+      sendToBot(chatData);
     }
     
     renderChat();
